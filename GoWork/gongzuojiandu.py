@@ -182,7 +182,7 @@ def monitor_software_usage(logsheet,bmd):
         else:
             xiedaishijian = xiedaishijian + 1
 
-        if xiedaishijian > 120:##走神两分钟以上
+        if xiedaishijian > 180:##走神三分钟以上
             xiedaishijian = xiedaishijian + 1
             ##创建一个提醒随机数
             random_integer = random.randint(0, 1)
