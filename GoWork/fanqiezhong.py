@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox, simpledialog, font,ttk
 import pandas as pd
 import time
 import threading
@@ -21,15 +21,43 @@ import sys
 
 class PomodoroApp:
     def __init__(self, root):
-        self.root = root
-        self.root.title("番茄钟工具")
+
+
 
         # 时间配置
-        self.pomodoro_time = 15  # 番茄钟工作时间:25分钟
-        self.break_time = 3  # 番茄钟休息时间5分钟
-        self.long_break_time = 3  # 完成一项任务后的休息时间5分钟
+        self.pomodoro_time = 1500  # 番茄钟工作时间:25分钟
+        self.break_time = 300  # 番茄钟休息时间5分钟
+        self.long_break_time = 300  # 完成一项任务后的休息时间5分钟
         self.changxiuxicishu = 0 ##初始化长休息次数
-        self.changxiuxishijian = 18 ##长休息时间:半小时
+        self.changxiuxishijian = 1800 ##长休息时间:半小时
+        self.baogaoshengcheng = 300 ##生成报告的时间：5分钟
+        self.fadaishijian = 120 ##发呆两分钟自动警告
+
+        self.root = root
+        self.root.title("革命需要你！")
+        ##设置图标
+        self.root.geometry("300x465")
+        self.root.configure(bg="#e0dad2")  # 你可以将 "lightblue" 替换为你喜欢的颜色
+
+
+        icon_path = "GoWork/icons/shiqin2.ico"  # 替换为你的图标文件路径
+        if os.path.exists(icon_path):
+            self.root.iconbitmap(icon_path)
+
+
+        #self.custom_font = font.Font(root,family="SLZLH J Thin", size=14)##拾陆字濑户
+        self.custom_font = font.Font(root,family="Hangeuljaemin4.0", size=17)##韩国字体
+        #self.custom_font = font.Font(root,family="XYGZJSB J", size=12)##新愚公装甲宋
+        #self.custom_font = font.Font(root,family="汇文明朝体", size=15)
+        #self.custom_font = font.Font(root,family="京華老宋体", size=17)
+        #self.custom_font = font.Font(root,family="汀明体", size=16, weight="bold")
+        #self.custom_font = font.Font(root,family="长城长宋体", size=17)
+        #self.custom_font = font.Font(root,family="霞鹜铭心宋", size=17,weight="bold")
+
+
+
+
+
 
         # 文件路径
         self.file_path = "GoWork/tasks.xlsx"
@@ -52,6 +80,7 @@ class PomodoroApp:
         self.remaining_time = 0  # 剩余时间
         self.state = "idle"  # 当前状态：idle, working, break, paused
         self.running = False  # 控制线程运行的标志
+
 
         # 创建界面组件
         self.create_widgets()
@@ -77,64 +106,73 @@ class PomodoroApp:
 
     def create_widgets(self):
         # 创建当前任务标签
-        self.task_label = tk.Label(self.root, text="当前任务: ")
+        self.task_label = tk.Label(self.root, text="当前任务: ", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.task_label.pack()
 
         # 创建任务内容标签
-        self.task_content = tk.Label(self.root, text="")
+        self.task_content = tk.Label(self.root, text="", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.task_content.pack()
 
         # 创建进度标签
-        self.progress_label = tk.Label(self.root, text="进度: ")
+        self.progress_label = tk.Label(self.root, text="进度: ", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.progress_label.pack()
 
         # 创建进度条画布
-        self.progress_bar = tk.Canvas(self.root, width=200, height=20)
+        self.progress_bar = tk.Canvas(self.root, width=200, height=20, bg="#e0dad2",highlightbackground="#4a372b", highlightthickness=0.5)
         self.progress_bar.pack()
 
         # 创建剩余时间标签
-        self.time_label = tk.Label(self.root, text="剩余时间: ")
+        self.time_label = tk.Label(self.root, text="剩余时间: ", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.time_label.pack()
 
+        button_frame = tk.Frame(self.root, bg="#e0dad2")
+        button_frame.pack(pady=2)
         # 创建开始按钮
-        self.start_button = tk.Button(self.root, text="开始", command=self.start_pomodoro)
-        self.start_button.pack()
+        self.start_button = tk.Button(button_frame, text="开始", bg="#e0dad2", command=self.start_pomodoro, font=self.custom_font, fg="#4a372b")
+        self.start_button.grid(row=0, column=0, padx=5, pady=0)
 
         # 创建暂停按钮
-        self.pause_button = tk.Button(self.root, text="暂停", command=self.pause_pomodoro)
-        self.pause_button.pack()
+        self.pause_button = tk.Button(button_frame, text="暂停", bg="#e0dad2", command=self.pause_pomodoro, font=self.custom_font, fg="#4a372b")
+        self.pause_button.grid(row=0, column=1, padx=5, pady=0)
 
         # 创建继续按钮
-        self.continue_button = tk.Button(self.root, text="继续", command=self.continue_pomodoro)
-        self.continue_button.pack()
+        self.continue_button = tk.Button(button_frame, text="继续", bg="#e0dad2", command=self.continue_pomodoro, font=self.custom_font, fg="#4a372b")
+        self.continue_button.grid(row=0, column=2, padx=5, pady=0)
 
+        button_frame2 = tk.Frame(self.root, bg="#e0dad2")
+        button_frame2.pack(pady=2)
         # 创建添加待办事项按钮
-        self.add_task_button = tk.Button(self.root, text="添加待办事项", command=self.add_task)
-        self.add_task_button.pack()
+        self.add_task_button = tk.Button(button_frame2,text="添加待办", bg="#e0dad2", command=self.add_task, font=self.custom_font, fg="#4a372b")
+        self.add_task_button.grid(row=0, column=0, padx=5, pady=0)
+        # 创建显示待办事项按钮
+        self.show_todo_button = tk.Button(button_frame2,text="显示待办", bg="#e0dad2", command=self.show_todo, font=self.custom_font, fg="#4a372b")
+        self.show_todo_button.grid(row=0, column=1, padx=5, pady=0)
 
         # 创建事件完成按钮
-        self.complete_button = tk.Button(self.root, text="事件完成", command=self.complete_task)
-        self.complete_button.pack()
+        self.complete_button = tk.Button(self.root, text="事件完成", bg="#e0dad2", command=self.complete_task, font=self.custom_font, fg="#4a372b")
+        self.complete_button.pack(pady=2)
 
         # 创建小红花标签
-        self.flowers_label = tk.Label(self.root, text="小红花: 0")
+        self.flowers_label = tk.Label(self.root, text="小红花: 0", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.flowers_label.pack()
 
         # 创建番茄钟计数标签
-        self.pomodoro_count_label = tk.Label(self.root, text="当前事件耗费番茄: 0")
+        self.pomodoro_count_label = tk.Label(self.root, text="当前事件耗费番茄: 0", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.pomodoro_count_label.pack()
 
         # 创建打断次数标签
-        self.interruptions_label = tk.Label(self.root, text="当前番茄被打断次数: 0")
+        self.interruptions_label = tk.Label(self.root, text="当前番茄被打断次数: 0", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.interruptions_label.pack()
 
         # 创建暂停时间标签
-        self.pause_time_label = tk.Label(self.root, text="暂停时间: 0")
+        self.pause_time_label = tk.Label(self.root, text="暂停时间: 0", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.pause_time_label.pack()
 
         # 创建长休息次数标签
-        self.changxiuxi_label = tk.Label(self.root, text="差4次长休息")
+        self.changxiuxi_label = tk.Label(self.root, text="差4次长休息", bg="#e0dad2", font=self.custom_font, fg="#4a372b")
         self.changxiuxi_label.pack()
+
+
 
     def load_task(self):
         # 如果今日待办sheet不为空
@@ -347,7 +385,7 @@ class PomodoroApp:
         # 计算进度并更新进度条
         progress = (total_time - remaining_time) / total_time * 200
         self.progress_bar.delete("all")
-        self.progress_bar.create_rectangle(0, 0, progress, 20, fill="green")
+        self.progress_bar.create_rectangle(0, 0, progress, 20, fill="#4a372b")
 
     def update_time(self, remaining_time):
         # 计算剩余时间的分钟和秒数，并更新剩余时间标签
@@ -421,18 +459,9 @@ class PomodoroApp:
                             qitatime = qitatime - 1
 
                 wufenzhongzongji = wufenzhongzongji + 1
-                if wufenzhongzongji == 300:
+                if wufenzhongzongji == self.baogaoshengcheng:
                     dangqiandazilv = (wufenzhonganjian/wufenzhongzongji)*100
-                    self.toaster.show_toast(
-                        title=f"5分钟报告,有用窗口的工作时间占到了{dangqiandazilv}%，",
-                        msg=f"已经记录在表格中，可以进行查看”",
-                        icon_path="GoWork/icons/shiqin2.ico",
-                        duration=300,
-                        threaded=True,
-                    )
-                    data, fs = sf.read("GoWork/baogao.wav")
-                    sd.play(data, fs)
-                    sd.wait()
+
                     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     drama_timelv = (drama_time/wufenzhongzongji)*100
                     wendang_timelv = (wendang_time/wufenzhongzongji)*100
@@ -449,6 +478,16 @@ class PomodoroApp:
                     music_time = 0
                     l2d_time = 0
                     qitatime = 0
+                    self.toaster.show_toast(
+                        title=f"5分钟报告,有用窗口的工作时间占到了{dangqiandazilv}%，",
+                        msg=f"已经记录在表格中，可以进行查看”",
+                        icon_path="GoWork/icons/shiqin2.ico",
+                        duration=300,
+                        threaded=True,
+                    )
+                    data, fs = sf.read("GoWork/baogao.wav")
+                    sd.play(data, fs)
+                    sd.wait()
                     logsheet.to_excel("GoWork/log.xlsx", index=False)
 
                 current_time = time.time()
@@ -461,7 +500,7 @@ class PomodoroApp:
                 else:
                     xiedaishijian = xiedaishijian + 1
 
-                if xiedaishijian > 120:
+                if xiedaishijian > self.fadaishijian:
                     xiedaishijian = xiedaishijian + 1
                     random_integer = random.randint(0, 1)
                     character = self.df.at[random_integer, '角色']
@@ -483,10 +522,50 @@ class PomodoroApp:
                 time.sleep(1)
             else:
                 time.sleep(1)
+    def show_todo(self):
+        # 创建新的小界面
+        todo_window = tk.Toplevel(self.root)
+        todo_window.title("待办事项")
+        todo_window.geometry("1200x600")
 
+        # 创建Treeview组件
+        tree = ttk.Treeview(todo_window)
+        tree.pack(fill=tk.BOTH, expand=True)
 
+        # 设置表格列
+        tree["columns"] = tuple(self.todo_df.columns)
+        for col in self.todo_df.columns:
+            tree.heading(col, text=col)
+            tree.column(col, anchor="center")
 
+        # 插入数据
+        for index, row in self.todo_df.iterrows():
+            tree.insert("", "end", values=tuple(row))
 
+        # 自定义Treeview的样式
+        style = ttk.Style()
+        style.configure("Treeview",
+                        background="#e0dad2",
+                        foreground="#4a372b",
+                        fieldbackground="#e0dad2",
+                        font=self.custom_font)
+        style.map('Treeview', background=[('selected', '#4a372b')])
+        
+        # 配置未被选择行的样式
+        style.configure("Treeview.unselected",
+                        background="#e0dad2",
+                        foreground="#4a372b",
+                        font=self.custom_font)
+        tree.tag_configure('unselected', background="#e0dad2", foreground="#4a372b")
+
+        # 配置表头的样式
+        style.configure("Treeview.Heading",
+                        background="#4a372b",
+                        foreground="#4a372b",
+                        font=self.custom_font)
+        # 创建添加待办事项按钮
+        add_task_button = tk.Button(todo_window, text="添加待办事项", bg="#e0dad2", command=self.add_task, font=self.custom_font, fg="#4a372b")
+        add_task_button.pack()
 
 
 if __name__ == "__main__":
